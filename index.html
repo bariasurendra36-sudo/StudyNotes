@@ -28,33 +28,9 @@
 <body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden">
 
     <!-- ========================================== -->
-    <!-- AUTH SCREEN -->
-    <!-- ========================================== -->
-    <div id="auth-view" class="absolute inset-0 z-50 bg-slate-50 flex items-center justify-center p-4">
-        <div class="bg-white p-10 rounded-2xl shadow-sm border border-slate-100 w-full max-w-md text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-50 text-indigo-600 mb-6">
-                <i data-lucide="book-open" class="w-8 h-8"></i>
-            </div>
-            <h1 class="text-2xl font-bold text-slate-900 mb-2">StudyNotes Vault</h1>
-            <p class="text-slate-500 mb-8 text-sm">Your private study workspace. Sign in to access your notes and study files.</p>
-            
-            <button id="btn-login" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-3 rounded-xl text-sm font-semibold transition-all shadow-sm">
-                <svg class="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Continue with Google
-            </button>
-            <div id="auth-error" class="hidden mt-4 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100"></div>
-        </div>
-    </div>
-
-    <!-- ========================================== -->
     <!-- DASHBOARD -->
     <!-- ========================================== -->
-    <div id="dashboard-view" class="hidden w-full h-full flex">
+    <div id="dashboard-view" class="w-full h-full flex">
         
         <!-- Sidebar -->
         <aside class="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex shrink-0 z-20">
@@ -75,17 +51,32 @@
                 </button>
             </nav>
 
+            <!-- Sidebar Auth Section -->
             <div class="p-4 border-t border-slate-100">
-                <div class="flex items-center gap-3 mb-4 px-2">
-                    <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs" id="user-initial">U</div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-slate-900 truncate" id="user-name">User Name</p>
-                        <p class="text-xs text-slate-500 truncate" id="user-email">user@email.com</p>
-                    </div>
-                </div>
-                <button id="btn-logout" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors">
-                    <i data-lucide="log-out" class="h-4 w-4"></i> Sign Out
+                <!-- Logged Out State -->
+                <button id="btn-login" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Sign In
                 </button>
+
+                <!-- Logged In State (Hidden initially) -->
+                <div id="user-profile" class="hidden">
+                    <div class="flex items-center gap-3 mb-4 px-2">
+                        <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs" id="user-initial">U</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-slate-900 truncate" id="user-name">User Name</p>
+                            <p class="text-xs text-slate-500 truncate" id="user-email">user@email.com</p>
+                        </div>
+                    </div>
+                    <button id="btn-logout" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors">
+                        <i data-lucide="log-out" class="h-4 w-4"></i> Sign Out
+                    </button>
+                </div>
             </div>
         </aside>
 
@@ -97,12 +88,16 @@
                     <i data-lucide="book-open" class="text-indigo-600 h-5 w-5"></i>
                     <span class="font-bold text-slate-900">StudyNotes</span>
                 </div>
-                <!-- Simple mobile tab switcher (for demo purposes) -->
-                <select id="mobile-nav" class="text-sm border-none bg-slate-50 rounded-lg px-2 py-1 outline-none font-medium">
-                    <option value="files">Study Files</option>
-                    <option value="notes">My Notes</option>
-                    <option value="team">Collaborators</option>
-                </select>
+                <div class="flex items-center gap-3">
+                    <select id="mobile-nav" class="text-sm border-none bg-slate-50 rounded-lg px-2 py-1 outline-none font-medium">
+                        <option value="files">Study Files</option>
+                        <option value="notes">My Notes</option>
+                        <option value="team">Collaborators</option>
+                    </select>
+                    <!-- Mobile Auth Actions -->
+                    <button id="btn-mobile-login" class="text-indigo-600 hover:bg-indigo-50 p-1.5 rounded-lg"><i data-lucide="log-in" class="h-5 w-5"></i></button>
+                    <button id="btn-mobile-logout" class="hidden text-slate-500 hover:bg-slate-100 p-1.5 rounded-lg"><i data-lucide="log-out" class="h-5 w-5"></i></button>
+                </div>
             </header>
 
             <!-- Scrollable Content -->
@@ -110,9 +105,11 @@
                 
                 <!-- VIEW: Study Files -->
                 <div id="view-files" class="tab-view max-w-6xl mx-auto h-full flex flex-col">
-                    <div class="mb-6 shrink-0">
-                        <h2 class="text-2xl font-bold text-slate-900">Study Files</h2>
-                        <p class="text-sm text-slate-500 mt-1">Global study materials and documents available for download.</p>
+                    <div class="mb-6 shrink-0 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-900">Study Files</h2>
+                            <p class="text-sm text-slate-500 mt-1">Global study materials and documents available for download.</p>
+                        </div>
                     </div>
 
                     <div class="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
@@ -146,6 +143,7 @@
                                 </h3>
                                 <div id="folders-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-4">
                                     <!-- Populated by JS -->
+                                    <div class="col-span-full py-6 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl">Loading...</div>
                                 </div>
                             </div>
 
@@ -314,10 +312,11 @@
     <!-- App Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
+        // Firebase Configuration
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyDgiJTB6bNskJrn2Ym35amo6AErFtz13aQ",
             authDomain: "studynotes-6be3b.firebaseapp.com",
             projectId: "studynotes-6be3b",
@@ -331,27 +330,61 @@
         const db = getFirestore(app);
         const googleProvider = new GoogleAuthProvider();
 
-        const ARTIFACT_APP_ID = "studynotes_v3_saas";
+        const ARTIFACT_APP_ID = typeof __app_id !== 'undefined' ? __app_id : "studynotes_v3_saas";
         const ADMIN_EMAIL = "bariasurendra36@gmail.com";
         let currentUser = null;
-        let unsubscribers = [];
-
-        // Global State (for UI mappings)
+        
+        let publicUnsubscribers = [];
+        let privateUnsubscribers = [];
         let globalFolders = [];
 
-        // --- AUTH LOGIC ---
-        document.getElementById('btn-login').addEventListener('click', async () => {
-            try { await signInWithPopup(auth, googleProvider); } 
-            catch (e) { document.getElementById('auth-error').textContent = e.message; document.getElementById('auth-error').classList.remove('hidden'); }
-        });
+        // --- AUTH INIT ---
+        // Crucial: Must authenticate BEFORE making any Firestore queries
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth Init Error:", err);
+            }
+        };
+        initAuth();
 
-        document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+        // --- AUTH ACTIONS ---
+        const handleLogin = async () => {
+            try { await signInWithPopup(auth, googleProvider); } 
+            catch (e) { console.error("Login Error:", e.message); }
+        };
+
+        const handleLogout = async () => {
+            try {
+                await signOut(auth);
+                await signInAnonymously(auth); // Fallback to anonymous so public data stays visible
+            } catch (e) {
+                console.error("Logout Error:", e);
+            }
+        };
+
+        document.getElementById('btn-login').addEventListener('click', handleLogin);
+        document.getElementById('btn-mobile-login').addEventListener('click', handleLogin);
+        document.getElementById('btn-logout').addEventListener('click', handleLogout);
+        document.getElementById('btn-mobile-logout').addEventListener('click', handleLogout);
 
         onAuthStateChanged(auth, (user) => {
+            if (!user) return; // Wait for initial Auth to resolve
+
             currentUser = user;
-            if (user) {
-                document.getElementById('auth-view').classList.add('hidden');
-                document.getElementById('dashboard-view').classList.remove('hidden');
+            const isAnon = user.isAnonymous;
+            
+            if (!isAnon) {
+                // UI Toggle: Show Profile, Hide Login
+                document.getElementById('btn-login').classList.add('hidden');
+                document.getElementById('user-profile').classList.remove('hidden');
+                document.getElementById('btn-mobile-login').classList.add('hidden');
+                document.getElementById('btn-mobile-logout').classList.remove('hidden');
                 
                 // Update Sidebar Profile
                 document.getElementById('user-name').textContent = user.displayName || 'Student';
@@ -365,11 +398,24 @@
                     document.getElementById('admin-upload-panel').classList.add('hidden');
                 }
 
-                initDataFetchers();
+                initPublicDataFetchers();
+                initPrivateDataFetchers();
             } else {
-                document.getElementById('auth-view').classList.remove('hidden');
-                document.getElementById('dashboard-view').classList.add('hidden');
-                clearDataFetchers();
+                // UI Toggle: Show Login, Hide Profile
+                document.getElementById('btn-login').classList.remove('hidden');
+                document.getElementById('user-profile').classList.add('hidden');
+                document.getElementById('btn-mobile-login').classList.remove('hidden');
+                document.getElementById('btn-mobile-logout').classList.add('hidden');
+                
+                document.getElementById('admin-upload-panel').classList.add('hidden');
+                
+                initPublicDataFetchers();
+                clearPrivateDataFetchers();
+                
+                // Show empty states for private tabs when logged out
+                document.getElementById('notes-grid').innerHTML = `<div class="col-span-full py-16 text-center text-slate-500 text-sm border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center gap-3"><i data-lucide="lock" class="h-8 w-8 text-slate-300"></i>Please sign in to access your private notes.</div>`;
+                document.getElementById('team-list').innerHTML = `<li class="py-12 text-center text-slate-500 text-sm bg-slate-50 border-2 border-dashed border-slate-200 m-4 rounded-xl">Please sign in to manage collaborators.</li>`;
+                lucide.createIcons();
             }
         });
 
@@ -396,6 +442,17 @@
 
         // --- MODAL SYSTEM ---
         window.openModal = (modalId) => {
+            // Strict Auth Checks
+            if ((modalId === 'folder-modal' || modalId === 'file-modal') && (!currentUser || currentUser.email !== ADMIN_EMAIL)) {
+                console.error("Unauthorized Access: Only admins can open this modal.");
+                return;
+            }
+            if ((modalId === 'note-modal' || modalId === 'member-modal') && (!currentUser || currentUser.isAnonymous)) {
+                // Force login if trying to add personal data while logged out/anonymous
+                handleLogin();
+                return;
+            }
+
             const backdrop = document.getElementById('modal-backdrop');
             const modals = document.querySelectorAll('.modal-content');
             modals.forEach(m => m.classList.add('hidden'));
@@ -421,6 +478,12 @@
 
         // Simulated Download
         window.downloadFile = (fileName) => {
+            // Trigger login if trying to download while anonymous
+            if (!currentUser || currentUser.isAnonymous) {
+                handleLogin();
+                return;
+            }
+
             const blob = new Blob([`Simulated content for ${fileName}`], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -431,39 +494,51 @@
         };
 
         // --- FIRESTORE DATA FETCHING ---
-        function clearDataFetchers() {
-            unsubscribers.forEach(unsub => unsub());
-            unsubscribers = [];
-        }
-
-        function initDataFetchers() {
-            if (!currentUser) return;
-            clearDataFetchers();
+        function initPublicDataFetchers() {
+            if (!currentUser) return; // Guard clause
+            
+            publicUnsubscribers.forEach(unsub => unsub());
+            publicUnsubscribers = [];
 
             // 1. Fetch Public Folders
             const foldersRef = collection(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'folders');
-            unsubscribers.push(onSnapshot(foldersRef, (snapshot) => {
+            publicUnsubscribers.push(onSnapshot(foldersRef, (snapshot) => {
                 globalFolders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.createdAt - a.createdAt);
                 renderFolders();
-            }, (err) => console.error("Folders Error:", err)));
+            }, (err) => {
+                console.error("Folders Error:", err);
+                document.getElementById('folders-grid').innerHTML = `<div class="col-span-full py-6 text-center text-red-500 text-sm">Cannot load folders. Check connection.</div>`;
+            }));
 
             // 2. Fetch Public Files
             const filesRef = collection(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'files');
-            unsubscribers.push(onSnapshot(filesRef, (snapshot) => {
+            publicUnsubscribers.push(onSnapshot(filesRef, (snapshot) => {
                 const files = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.createdAt - a.createdAt);
                 renderFiles(files);
-            }, (err) => console.error("Files Error:", err)));
+            }, (err) => {
+                console.error("Files Error:", err);
+            }));
+        }
+
+        function clearPrivateDataFetchers() {
+            privateUnsubscribers.forEach(unsub => unsub());
+            privateUnsubscribers = [];
+        }
+
+        function initPrivateDataFetchers() {
+            if (!currentUser || currentUser.isAnonymous) return;
+            clearPrivateDataFetchers();
 
             // 3. Fetch Private Notes
             const notesRef = collection(db, 'artifacts', ARTIFACT_APP_ID, 'users', currentUser.uid, 'notes');
-            unsubscribers.push(onSnapshot(notesRef, (snapshot) => {
+            privateUnsubscribers.push(onSnapshot(notesRef, (snapshot) => {
                 const notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.createdAt - a.createdAt);
                 renderNotes(notes);
             }, (err) => console.error("Notes Error:", err)));
 
             // 4. Fetch Private Team
             const teamRef = collection(db, 'artifacts', ARTIFACT_APP_ID, 'users', currentUser.uid, 'teamMembers');
-            unsubscribers.push(onSnapshot(teamRef, (snapshot) => {
+            privateUnsubscribers.push(onSnapshot(teamRef, (snapshot) => {
                 const team = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.createdAt - a.createdAt);
                 renderTeam(team);
             }, (err) => console.error("Team Error:", err)));
@@ -558,7 +633,9 @@
         // Form: Folder (Admin Only)
         document.getElementById('form-folder').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if(!currentUser) return;
+            // Strict Auth Check: Only admin can create folders
+            if(!currentUser || currentUser.email !== ADMIN_EMAIL) return;
+
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true; btn.textContent = 'Saving...';
             try {
@@ -567,14 +644,16 @@
                     createdAt: serverTimestamp()
                 });
                 closeModals();
-            } catch (err) { alert(err.message); }
+            } catch (err) { console.error("Upload Error:", err.message); }
             finally { btn.disabled = false; btn.textContent = 'Create Folder'; }
         });
 
         // Form: File (Admin Only)
         document.getElementById('form-file').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if(!currentUser) return;
+            // Strict Auth Check: Only admin can upload files
+            if(!currentUser || currentUser.email !== ADMIN_EMAIL) return;
+
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true; btn.textContent = 'Saving...';
             try {
@@ -585,14 +664,15 @@
                     createdAt: serverTimestamp()
                 });
                 closeModals();
-            } catch (err) { alert(err.message); }
+            } catch (err) { console.error("Upload Error:", err.message); }
             finally { btn.disabled = false; btn.textContent = 'Save File'; }
         });
 
         // Form: Note (Private to User)
         document.getElementById('form-note').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if(!currentUser) return;
+            if(!currentUser || currentUser.isAnonymous) return;
+            
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true; btn.textContent = 'Saving...';
             try {
@@ -602,14 +682,15 @@
                     createdAt: serverTimestamp()
                 });
                 closeModals();
-            } catch (err) { alert(err.message); }
+            } catch (err) { console.error("Note Error:", err.message); }
             finally { btn.disabled = false; btn.textContent = 'Save Note'; }
         });
 
         // Form: Team Member (Private to User)
         document.getElementById('form-member').addEventListener('submit', async (e) => {
             e.preventDefault();
-            if(!currentUser) return;
+            if(!currentUser || currentUser.isAnonymous) return;
+            
             const btn = e.target.querySelector('button[type="submit"]');
             btn.disabled = true; btn.textContent = 'Saving...';
             try {
@@ -619,7 +700,7 @@
                     createdAt: serverTimestamp()
                 });
                 closeModals();
-            } catch (err) { alert(err.message); }
+            } catch (err) { console.error("Team Error:", err.message); }
             finally { btn.disabled = false; btn.textContent = 'Add Member'; }
         });
     </script>
