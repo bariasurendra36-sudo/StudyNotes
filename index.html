@@ -143,7 +143,7 @@
                                 </h3>
                                 <div id="folders-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-4">
                                     <!-- Populated by JS -->
-                                    <div class="col-span-full py-6 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl">Loading...</div>
+                                    <div class="col-span-full py-6 text-center text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-xl">Loading data...</div>
                                 </div>
                             </div>
 
@@ -226,30 +226,43 @@
         <!-- Modal: Add File -->
         <div id="file-modal" class="modal-content hidden bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                <h3 class="font-bold text-slate-900">Upload File (Metadata)</h3>
+                <h3 class="font-bold text-slate-900">Upload File</h3>
                 <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="h-5 w-5"></i></button>
             </div>
             <form id="form-file" class="p-6">
-                <div class="space-y-4 mb-6">
+                <div class="space-y-5 mb-6">
+                    <!-- Browse File Input -->
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">File Name</label>
-                        <input type="text" id="file-name" required placeholder="e.g. Chapter_4_Summary.pdf" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Choose Document</label>
+                        <input type="file" id="file-upload-input" required class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-colors border border-slate-300 rounded-lg p-1">
                     </div>
+                    
+                    <!-- Display Name (Optional) -->
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">File Size (e.g. 2.4 MB)</label>
-                        <input type="text" id="file-size" required placeholder="2.4 MB" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Display Name (Optional)</label>
+                        <input type="text" id="file-display-name" placeholder="Leave blank to use original file name" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                     </div>
+                    
+                    <!-- Simplified Folder Dropdown -->
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Select Folder</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Add to Folder (Optional)</label>
                         <select id="file-folder" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                            <option value="">No Folder (Root)</option>
+                            <option value="">None</option>
                             <!-- Populated dynamically -->
                         </select>
                     </div>
                 </div>
+                
+                <div id="upload-progress-container" class="hidden mb-4">
+                    <div class="w-full bg-slate-200 rounded-full h-2">
+                        <div class="bg-indigo-600 h-2 rounded-full" id="upload-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 text-right" id="upload-status-text">Uploading...</p>
+                </div>
+
                 <div class="flex justify-end gap-3">
                     <button type="button" onclick="closeModals()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm">Save File</button>
+                    <button type="submit" id="submit-file-btn" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm">Upload to Vault</button>
                 </div>
             </form>
         </div>
@@ -314,6 +327,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // Firebase Configuration
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
@@ -328,18 +342,19 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app); 
         const googleProvider = new GoogleAuthProvider();
 
         const ARTIFACT_APP_ID = typeof __app_id !== 'undefined' ? __app_id : "studynotes_v3_saas";
         const ADMIN_EMAIL = "bariasurendra36@gmail.com";
-        let currentUser = null;
         
+        let currentUser = null;
         let publicUnsubscribers = [];
         let privateUnsubscribers = [];
         let globalFolders = [];
 
         // --- AUTH INIT ---
-        // Crucial: Must authenticate BEFORE making any Firestore queries
+        // Crucial: Must authenticate anonymously BEFORE making any Firestore queries so "allow read: if request.auth != null" succeeds.
         const initAuth = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -360,12 +375,12 @@
         };
 
         const handleLogout = async () => {
-            try {
-                await signOut(auth);
-                await signInAnonymously(auth); // Fallback to anonymous so public data stays visible
-            } catch (e) {
-                console.error("Logout Error:", e);
-            }
+            try { 
+                await signOut(auth); 
+                // Fall back to anonymous right after logout so public files stay visible
+                await signInAnonymously(auth); 
+            } 
+            catch (e) { console.error("Logout Error:", e); }
         };
 
         document.getElementById('btn-login').addEventListener('click', handleLogin);
@@ -374,7 +389,7 @@
         document.getElementById('btn-mobile-logout').addEventListener('click', handleLogout);
 
         onAuthStateChanged(auth, (user) => {
-            if (!user) return; // Wait for initial Auth to resolve
+            if (!user) return; // Wait for the transition to settle
 
             currentUser = user;
             const isAnon = user.isAnonymous;
@@ -391,7 +406,7 @@
                 document.getElementById('user-email').textContent = user.email;
                 document.getElementById('user-initial').textContent = (user.displayName || 'S').charAt(0).toUpperCase();
 
-                // Admin UI Check - Toggles the Upload Panel
+                // Admin UI Check
                 if (user.email === ADMIN_EMAIL) {
                     document.getElementById('admin-upload-panel').classList.remove('hidden');
                 } else {
@@ -401,7 +416,7 @@
                 initPublicDataFetchers();
                 initPrivateDataFetchers();
             } else {
-                // UI Toggle: Show Login, Hide Profile
+                // UI Toggle: Show Login, Hide Profile (Anonymous State)
                 document.getElementById('btn-login').classList.remove('hidden');
                 document.getElementById('user-profile').classList.add('hidden');
                 document.getElementById('btn-mobile-login').classList.remove('hidden');
@@ -442,81 +457,72 @@
 
         // --- MODAL SYSTEM ---
         window.openModal = (modalId) => {
-            // Strict Auth Checks
-            if ((modalId === 'folder-modal' || modalId === 'file-modal') && (!currentUser || currentUser.email !== ADMIN_EMAIL)) {
-                console.error("Unauthorized Access: Only admins can open this modal.");
-                return;
-            }
+            if ((modalId === 'folder-modal' || modalId === 'file-modal') && (!currentUser || currentUser.email !== ADMIN_EMAIL)) return;
             if ((modalId === 'note-modal' || modalId === 'member-modal') && (!currentUser || currentUser.isAnonymous)) {
-                // Force login if trying to add personal data while logged out/anonymous
-                handleLogin();
+                handleLogin(); 
                 return;
             }
 
             const backdrop = document.getElementById('modal-backdrop');
-            const modals = document.querySelectorAll('.modal-content');
-            modals.forEach(m => m.classList.add('hidden'));
+            document.querySelectorAll('.modal-content').forEach(m => m.classList.add('hidden'));
             
             backdrop.classList.remove('hidden');
-            const target = document.getElementById(modalId);
-            target.classList.remove('hidden');
+            document.getElementById(modalId).classList.remove('hidden');
             
-            // Populate folder dropdown for files
             if (modalId === 'file-modal') {
                 const select = document.getElementById('file-folder');
-                select.innerHTML = '<option value="">No Folder (Root)</option>';
+                select.innerHTML = '<option value="">None</option>';
                 globalFolders.forEach(f => {
                     select.innerHTML += `<option value="${f.id}">${f.name}</option>`;
                 });
+                document.getElementById('upload-progress-container').classList.add('hidden');
             }
         };
 
         window.closeModals = () => {
             document.getElementById('modal-backdrop').classList.add('hidden');
             document.querySelectorAll('form').forEach(f => f.reset());
+            document.getElementById('upload-progress-container')?.classList.add('hidden');
         };
 
-        // Simulated Download
-        window.downloadFile = (fileName) => {
-            // Trigger login if trying to download while anonymous
+        // Real Download Logic
+        window.downloadFile = (url) => {
             if (!currentUser || currentUser.isAnonymous) {
                 handleLogin();
                 return;
             }
-
-            const blob = new Blob([`Simulated content for ${fileName}`], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            a.click();
-            URL.revokeObjectURL(url);
+            if(url) window.open(url, '_blank');
         };
 
         // --- FIRESTORE DATA FETCHING ---
         function initPublicDataFetchers() {
-            if (!currentUser) return; // Guard clause
+            if (!currentUser) return; // Guard to ensure user exists
             
             publicUnsubscribers.forEach(unsub => unsub());
             publicUnsubscribers = [];
 
-            // 1. Fetch Public Folders
             const foldersRef = collection(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'folders');
             publicUnsubscribers.push(onSnapshot(foldersRef, (snapshot) => {
                 globalFolders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.createdAt - a.createdAt);
                 renderFolders();
             }, (err) => {
                 console.error("Folders Error:", err);
-                document.getElementById('folders-grid').innerHTML = `<div class="col-span-full py-6 text-center text-red-500 text-sm">Cannot load folders. Check connection.</div>`;
+                document.getElementById('folders-grid').innerHTML = `
+                    <div class="col-span-full py-6 px-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-200">
+                        <b>Permission Denied:</b> Please update your Firestore Rules to allow read access.
+                    </div>`;
             }));
 
-            // 2. Fetch Public Files
             const filesRef = collection(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'files');
             publicUnsubscribers.push(onSnapshot(filesRef, (snapshot) => {
                 const files = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.createdAt - a.createdAt);
                 renderFiles(files);
             }, (err) => {
                 console.error("Files Error:", err);
+                document.getElementById('files-list').innerHTML = `
+                    <div class="py-4 px-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-200">
+                        Cannot load files. Check Firestore Rules.
+                    </div>`;
             }));
         }
 
@@ -527,16 +533,15 @@
 
         function initPrivateDataFetchers() {
             if (!currentUser || currentUser.isAnonymous) return;
+            
             clearPrivateDataFetchers();
 
-            // 3. Fetch Private Notes
             const notesRef = collection(db, 'artifacts', ARTIFACT_APP_ID, 'users', currentUser.uid, 'notes');
             privateUnsubscribers.push(onSnapshot(notesRef, (snapshot) => {
                 const notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.createdAt - a.createdAt);
                 renderNotes(notes);
             }, (err) => console.error("Notes Error:", err)));
 
-            // 4. Fetch Private Team
             const teamRef = collection(db, 'artifacts', ARTIFACT_APP_ID, 'users', currentUser.uid, 'teamMembers');
             privateUnsubscribers.push(onSnapshot(teamRef, (snapshot) => {
                 const team = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => b.createdAt - a.createdAt);
@@ -567,7 +572,7 @@
                 return;
             }
             list.innerHTML = files.map(f => {
-                const folderName = globalFolders.find(fol => fol.id === f.folderId)?.name || 'Root';
+                const folderName = globalFolders.find(fol => fol.id === f.folderId)?.name || 'None';
                 return `
                 <div class="bg-white p-4 border border-slate-200 rounded-xl flex items-center justify-between gap-4 shadow-sm hover:border-indigo-200 transition-colors">
                     <div class="flex items-center gap-4 min-w-0">
@@ -576,12 +581,11 @@
                             <h4 class="font-medium text-slate-900 truncate">${f.name}</h4>
                             <div class="flex items-center gap-2 mt-1 text-xs text-slate-500">
                                 <span>${f.size}</span>
-                                <span>•</span>
-                                <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600">${folderName}</span>
+                                ${f.folderId ? `<span>•</span><span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600">${folderName}</span>` : ''}
                             </div>
                         </div>
                     </div>
-                    <button onclick="downloadFile('${f.name}')" class="shrink-0 p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Download">
+                    <button onclick="downloadFile('${f.downloadUrl || ''}')" class="shrink-0 p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Download">
                         <i data-lucide="download" class="h-5 w-5"></i>
                     </button>
                 </div>
@@ -628,12 +632,10 @@
             `).join('');
         }
 
-        // --- FORM SUBMISSIONS (CREATE DATA) ---
+        // --- FORM SUBMISSIONS ---
         
-        // Form: Folder (Admin Only)
         document.getElementById('form-folder').addEventListener('submit', async (e) => {
             e.preventDefault();
-            // Strict Auth Check: Only admin can create folders
             if(!currentUser || currentUser.email !== ADMIN_EMAIL) return;
 
             const btn = e.target.querySelector('button[type="submit"]');
@@ -648,27 +650,66 @@
             finally { btn.disabled = false; btn.textContent = 'Create Folder'; }
         });
 
-        // Form: File (Admin Only)
+        // REAL FILE UPLOAD LOGIC
         document.getElementById('form-file').addEventListener('submit', async (e) => {
             e.preventDefault();
-            // Strict Auth Check: Only admin can upload files
             if(!currentUser || currentUser.email !== ADMIN_EMAIL) return;
 
-            const btn = e.target.querySelector('button[type="submit"]');
-            btn.disabled = true; btn.textContent = 'Saving...';
+            const fileInput = document.getElementById('file-upload-input');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const btn = document.getElementById('submit-file-btn');
+            const progressContainer = document.getElementById('upload-progress-container');
+            const progressBar = document.getElementById('upload-progress-bar');
+            const statusText = document.getElementById('upload-status-text');
+
+            btn.disabled = true; 
+            btn.textContent = 'Uploading...';
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '20%';
+
             try {
+                // 1. Upload to Firebase Storage
+                const storageRefPath = `artifacts/${ARTIFACT_APP_ID}/public/files/${Date.now()}_${file.name}`;
+                const fileRef = ref(storage, storageRefPath);
+                
+                statusText.textContent = "Uploading to server...";
+                await uploadBytes(fileRef, file);
+                progressBar.style.width = '70%';
+
+                // 2. Get Download URL
+                statusText.textContent = "Generating link...";
+                const downloadUrl = await getDownloadURL(fileRef);
+                progressBar.style.width = '90%';
+
+                // 3. Save to Firestore
+                statusText.textContent = "Saving to database...";
+                const customName = document.getElementById('file-display-name').value.trim();
+                const finalName = customName || file.name;
+                const calculatedSize = (file.size / (1024*1024)).toFixed(2) + ' MB';
+
                 await addDoc(collection(db, 'artifacts', ARTIFACT_APP_ID, 'public', 'data', 'files'), {
-                    name: document.getElementById('file-name').value,
-                    size: document.getElementById('file-size').value,
+                    name: finalName,
+                    size: calculatedSize,
                     folderId: document.getElementById('file-folder').value || null,
+                    downloadUrl: downloadUrl,
                     createdAt: serverTimestamp()
                 });
-                closeModals();
-            } catch (err) { console.error("Upload Error:", err.message); }
-            finally { btn.disabled = false; btn.textContent = 'Save File'; }
+                
+                progressBar.style.width = '100%';
+                setTimeout(() => closeModals(), 500);
+
+            } catch (err) { 
+                console.error("Upload Error:", err.message);
+                statusText.textContent = "Upload failed! Try again.";
+                statusText.classList.add("text-red-500");
+            } finally { 
+                btn.disabled = false; 
+                btn.textContent = 'Upload to Vault'; 
+            }
         });
 
-        // Form: Note (Private to User)
         document.getElementById('form-note').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUser || currentUser.isAnonymous) return;
@@ -686,7 +727,6 @@
             finally { btn.disabled = false; btn.textContent = 'Save Note'; }
         });
 
-        // Form: Team Member (Private to User)
         document.getElementById('form-member').addEventListener('submit', async (e) => {
             e.preventDefault();
             if(!currentUser || currentUser.isAnonymous) return;
